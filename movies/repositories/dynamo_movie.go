@@ -2,59 +2,74 @@ package repositories
 
 import (
 	"awsLambdaExample/movies/models"
-	"database/sql"
 	"encoding/json"
-	"errors"
 	"fmt"
-	_ "github.com/go-sql-driver/mysql"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
+	"os"
 )
 
-type MysqlMovie struct {
+type DynamoMovie struct {
 }
 
-func NewMysqlMovie() *MysqlMovie {
-	return &MysqlMovie{}
+func NewDynamoMovie() *DynamoMovie {
+	return &DynamoMovie{}
 }
 
-func (rep *MysqlMovie) GetAll() (string, error) {
-	fmt.Println("Go MySQL")
+func (rep *DynamoMovie) GetAll() (string, error) {
+	//Inicia envio de mensaje a la cola
+	table := os.Getenv("MOVIES_TABLE")
 
-	// Open up our database connection.
-	// I've set up a database on my local machine using phpmyadmin.
-	// The database is called testDb
-	db, err := sql.Open("mysql", "root:strongpassword@tcp(127.0.0.1:3306)/movies")
+	// Initialize a session in us-west-2 that the SDK will use to load
+	// credentials from the shared credentials file ~/.aws/credentials.
+	sess, err := session.NewSession(&aws.Config{
+		Region: aws.String(os.Getenv("REGION"))},
+	)
 
-	// if there is an error opening the connection, handle it
 	if err != nil {
-		return "", errors.New("Error de repositorio")
+		fmt.Println("Get session failed:")
+		fmt.Println((err.Error()))
+		os.Exit(1)
+	}
+	// Create a SQS service client.
+	svc := dynamodb.New(sess)
+
+	// snippet-start:[dynamodb.go.scan_items.call]
+	// Build the query input parameters
+	params := &dynamodb.ScanInput{
+		TableName:                 aws.String(table),
 	}
 
-	// defer the close till after the main function has finished
-	// executing
-	defer db.Close()
-
-	// Execute the query
-	results, err := db.Query("SELECT *  FROM movies limit 10")
+	// Make the DynamoDB Query API call
+	result, err := svc.Scan(params)
 	if err != nil {
-		return "", errors.New("Error de repositorio")
+		fmt.Println("Query API call failed:")
+		fmt.Println((err.Error()))
+		os.Exit(1)
 	}
+	Movies := []models.Movie{}
 
-	var movies []models.Movie
-	for results.Next() {
-		var movie models.Movie
-		// for each row, scan the result into our tag composite object
-		err = results.Scan(&movie.ID, &movie.VoteCount, &movie.VoteAverage, &movie.Title, &movie.OriginalTitle, &movie.OriginalLanguage, &movie.Adult, &movie.PosterPath, &movie.Overview, &movie.ReleaseDate, &movie.Popularity)
+	for _, i := range result.Items {
+		item := models.Movie{}
+
+		err = dynamodbattribute.UnmarshalMap(i, &item)
+
 		if err != nil {
-			panic(err.Error()) // proper error handling instead of panic in your app
+			fmt.Println("Got error unmarshalling:")
+			fmt.Println(err.Error())
+			os.Exit(1)
 		}
-		// and then print out the tag's Name attribute
-		movies = append(movies, movie)
+		Movies = append(Movies, item)
 	}
 
-	moviesJson, err := json.Marshal(movies)
+
+	json, err := json.Marshal(Movies)
 	if err != nil {
-		return "", errors.New("Error de repositorio")
+		fmt.Println("Got error marshalling:")
+		fmt.Println(err.Error())
+		os.Exit(1)
 	}
-
-	return string(moviesJson), nil
+	return string(json),nil
 }

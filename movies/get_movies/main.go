@@ -19,7 +19,7 @@ type Handler func(ctx context.Context, req events.APIGatewayProxyRequest) (event
 func myHandler(uc getMoviesInterface) Handler {
 	return func(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 
-		fmt.Println("Handler", "endpoint store-list-task")
+		fmt.Println("Handler", "endpoint get movies")
 		res, err := uc.Handle()
 		if err != nil {
 			return events.APIGatewayProxyResponse{Body: "error", StatusCode: 500}, nil
@@ -29,7 +29,7 @@ func myHandler(uc getMoviesInterface) Handler {
 }
 
 func main() {
-	moviesRepository := repositories.NewDummyMovie()
+	moviesRepository := repositories.NewDynamoMovie()
 	usecase := NewGetMovies(moviesRepository)
 	lambda.Start(myHandler(usecase))
 }
