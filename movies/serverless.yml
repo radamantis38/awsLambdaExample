@@ -1,11 +1,23 @@
 service: movies
 
-frameworkVersion: ">=1.28.0 <2.0.0"
+plugins:
+  - serverless-localstack
+
+frameworkVersion: ">=1.28.0 <2.16.2"
+
+custom:
+  localstack:
+    debug: true
+    stages:
+      - local
 
 provider:
   name: aws
   runtime: go1.x
-  region: us-east-2
+  stage: ${opt:stage, 'local'}
+  region: us-east-1
+  deploymentBucket:
+    name: algo
   environment:
     REGION: ${self:provider.region}
     MOVIES_TABLE: movies
@@ -19,6 +31,8 @@ provider:
         - dynamodb:UpdateItem
       Resource:
         - arn:aws:dynamodb:${self:provider.region}:*:*
+  apiGateway:
+    shouldStartNameWithService: true
 
 package:
  exclude:
