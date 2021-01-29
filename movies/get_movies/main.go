@@ -29,7 +29,7 @@ func myHandler(uc getMoviesInterface) Handler {
 }
 
 func main() {
-	moviesRepository := repositories.NewDummyMovie()
+	moviesRepository := repositories.NewDynamoMovie()
 	usecase := NewGetMovies(moviesRepository)
 	lambda.Start(myHandler(usecase))
 }

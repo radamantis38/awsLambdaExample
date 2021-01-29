@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
@@ -19,19 +20,20 @@ func NewDynamoMovie() *DynamoMovie {
 }
 
 func (rep *DynamoMovie) GetAll() (string, error) {
-	//Inicia envio de mensaje a la cola
+
 	table := os.Getenv("MOVIES_TABLE")
 
-	// Initialize a session in us-west-2 that the SDK will use to load
-	// credentials from the shared credentials file ~/.aws/credentials.
 	sess, err := session.NewSession(&aws.Config{
-		Region: aws.String(os.Getenv("REGION"))},
-	)
+		Credentials: credentials.NewStaticCredentials("not", "empty", ""),
+		DisableSSL:  aws.Bool(true),
+		Region: aws.String(os.Getenv("REGION")),
+		Endpoint:    aws.String("http://" + os.Getenv("LOCALSTACK_HOSTNAME")+":4566"),
+	})
 
 	if err != nil {
 		fmt.Println("Get session failed:")
 		fmt.Println((err.Error()))
-		os.Exit(1)
+		return "",err
 	}
 	// Create a SQS service client.
 	svc := dynamodb.New(sess)
@@ -47,7 +49,7 @@ func (rep *DynamoMovie) GetAll() (string, error) {
 	if err != nil {
 		fmt.Println("Query API call failed:")
 		fmt.Println((err.Error()))
-		os.Exit(1)
+		return "",err
 	}
 	Movies := []models.Movie{}
 
@@ -59,7 +61,7 @@ func (rep *DynamoMovie) GetAll() (string, error) {
 		if err != nil {
 			fmt.Println("Got error unmarshalling:")
 			fmt.Println(err.Error())
-			os.Exit(1)
+			return "",err
 		}
 		Movies = append(Movies, item)
 	}
@@ -69,7 +71,9 @@ func (rep *DynamoMovie) GetAll() (string, error) {
 	if err != nil {
 		fmt.Println("Got error marshalling:")
 		fmt.Println(err.Error())
-		os.Exit(1)
+		return "",err
 	}
 	return string(json),nil
+
+
 }

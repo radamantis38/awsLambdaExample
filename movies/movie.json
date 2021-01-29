@@ -1,0 +1,35 @@
+{
+  "id": {
+    "N": "2"
+  },
+  "vote_count": {
+    "N": "2219"
+  },
+  "vote_average": {
+    "N": "6"
+  },
+  "title": {
+    "S": "Terminator"
+  },
+  "original_title": {
+    "S": "Ad Astra"
+  },
+  "original_language": {
+    "S": "en"
+  },
+  "adult": {
+    "BOOL": false
+  },
+  "poster_path": {
+    "S": "/iR8TvOxTQNiTXFHs1S43RE2j0kg.jpg"
+  },
+  "overview": {
+    "S": "El futuro cercano, un tiempo en el que tanto la esperanza como la adversidad impulsan a la humanidad a mirar hacia las estrellas y más allá. Mientras un misterioso fenómeno amenaza con destruir la vida en el planeta Tierra, el astronauta Roy McBride emprende una misión a través de la inmensidad del espacio y sus muchos peligros para descubrir la verdad sobre una expedición perdida que décadas antes afrontó audazmente el vacío y el silencio en busca de lo desconocido."
+  },
+  "release_date": {
+    "S": "2019-09-17"
+  },
+  "popularity": {
+    "N": "99.999"
+  }
+}
